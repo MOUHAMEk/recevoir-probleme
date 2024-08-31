@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voir les Problèmes Rencontrés</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            font-size: 30px;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background-color: #3498db;
+            color: white;
+            padding: 20px;
+            text-transform: uppercase;
+            width: 100%;
+        }
+
+        main {
+            margin-top: 50px;
+            text-align: center;
+            width: 80%;
+        }
+
+        .day-selection {
+            margin: 20px 0;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 10px;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+
+        table, th, td {
+            border: 1px solid #bdc3c7;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+
+        td img {
+            max-width: 150px;
+            max-height: 150px;
+            display: block;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 18px;
+            background-color: #2980b9;
+            color: white;
+            padding: 20px;
+            width: 100%;
+            margin-top: 40px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Voir les Problèmes Rencontrés</h1>
+    </header>
+
+    <main>
+        <div class="day-selection">
+            <label for="dayDropdown">Sélectionnez un jour:</label>
+            <select id="dayDropdown">
+                <option value="" disabled selected>Choisir un jour...</option>
+            </select>
+        </div>
+
+        <div id="issueTableContainer" style="display: none;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Photo</th>
+                        <th>Commentaire</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody id="issueTableBody"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer>
+        MArisk
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCOA0a_rjXqY99KXyyuHEiPOJDGGapZQUo",
+            authDomain: "suivi-49954.firebaseapp.com",
+            databaseURL: "https://suivi-49954-default-rtdb.firebaseio.com",
+            projectId: "suivi-49954",
+            storageBucket: "suivi-49954.appspot.com",
+            messagingSenderId: "141836603566",
+            appId: "1:141836603566:web:aaff934468238d958cdd3f",
+            measurementId: "G-3CMYEPPYK8"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        const days = [
+            ...Array(31).keys()
+        ].map(i => `septembre ${i + 1}`).concat([...Array(30).keys()].map(i => `octobre ${i + 1}`));
+
+        const dayDropdown = document.getElementById("dayDropdown");
+        days.forEach(day => {
+            const option = document.createElement("option");
+            option.value = day;
+            option.textContent = day;
+            dayDropdown.appendChild(option);
+        });
+
+        dayDropdown.addEventListener("change", function() {
+            const selectedDay = dayDropdown.value;
+            if (selectedDay) {
+                fetchIssues(selectedDay);
+            }
+        });
+
+        async function fetchIssues(day) {
+            const issueTableContainer = document.getElementById("issueTableContainer");
+            const issueTableBody = document.getElementById("issueTableBody");
+
+            issueTableBody.innerHTML = ''; // Clear previous data
+
+            const issuesRef = ref(db, 'issues/' + day);
+            onValue(issuesRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    Object.values(data).forEach(issue => {
+                        const row = document.createElement("tr");
+
+                        const photoCell = document.createElement("td");
+                        const img = document.createElement("img");
+                        img.src = issue.photoURL;
+                        photoCell.appendChild(img);
+
+                        const commentCell = document.createElement("td");
+                        commentCell.textContent = issue.commentaire;
+
+                        const descriptionCell = document.createElement("td");
+                        descriptionCell.textContent = issue.description;
+
+                        row.appendChild(photoCell);
+                        row.appendChild(commentCell);
+                        row.appendChild(descriptionCell);
+
+                        issueTableBody.appendChild(row);
+                    });
+                    issueTableContainer.style.display = "block";
+                } else {
+                    issueTableContainer.style.display = "none";
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>
